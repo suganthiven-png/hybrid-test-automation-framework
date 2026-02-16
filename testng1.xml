@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="testNGframeworkwithAI Suite">
+  <listeners>
+    <listener class-name="testNgframeworkwithAIV1.util.TestNGTestListener"/>
+  </listeners>
+  <test name="Sample Tests">
+    <classes>
+      <class name="testNgframeworkwithAIV1.testcases.TC_Homepage_001"/>
+    </classes>
+  </test>
+</suite>

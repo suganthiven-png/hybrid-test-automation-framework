@@ -1,0 +1,89 @@
+name: CI
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      xvfb:
+        image: selenium/standalone-chrome:latest
+        options: >-
+          --user 1000:1000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Run tests (headless)
+        env:
+          DISPLAY: :99
+        run: |
+          mvn -B -DskipTests=false test -Dheadless=true -Dbrowser=chrome -DbaseUrl=https://www.guru99.com -DimplicitWait=5
+
+      - name: Upload test-output artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: |
+            test-output
+            target/surefire-reports
+            target/failsafe-reports
+
+      - name: Archive test logs
+        if: always()
+        run: ls -R test-output || true
+
+  publish-report:
+    name: Publish Extent Report to GitHub Pages
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Download test-output artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-output
+          path: ./artifacts
+
+      - name: Ensure extent report exists
+        run: |
+          if [ ! -d "./artifacts/test-output/extent-report" ]; then
+            echo "Extent report not found in artifacts, aborting publish.";
+            ls -R ./artifacts || true;
+            exit 1;
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./artifacts/test-output/extent-report
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
