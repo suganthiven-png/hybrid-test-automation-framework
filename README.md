@@ -1,6 +1,6 @@
-# testNgframeworkwithAIV1
+# hybrid-test-automation-framework
 
-Project: testNgframeworkwithAIV1
+Project: hybrid-test-automation-framework
 
 A small TestNG + Selenium framework used to demonstrate automated UI tests. The project includes page objects, utilities (driver management, waiting helpers), and TestNG testcases. The tests are written in Java and use Maven for dependency management.
 
