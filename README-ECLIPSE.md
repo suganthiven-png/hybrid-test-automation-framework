@@ -1,4 +1,4 @@
-# README - Eclipse Run Instructions (testNgframeworkwithAIV1)
+# README - Eclipse Run Instructions (hybrid-test-automation-framework)
 
 This document contains an exportable Eclipse Run Configuration for running `TC_Homepage_001` and step-by-step guidance to import and use it.
 
