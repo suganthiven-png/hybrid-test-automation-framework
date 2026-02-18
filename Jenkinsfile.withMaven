@@ -1,0 +1,115 @@
+// Jenkinsfile variant that uses Jenkins-managed Maven and withMaven
+// Usage: Configure a Maven installation named 'M3' in Jenkins (Manage Jenkins -> Global Tool Configuration -> Maven -> Add Maven with name 'M3')
+// This pipeline uses the Pipeline Maven Integration plugin (provides `withMaven`) for better lifecycle integration.
+
+pipeline {
+  agent any
+
+  tools {
+    // Name must match a configured Maven installation in Jenkins
+    maven 'M3'
+  }
+
+  environment {
+    // Optional: set MAVEN_OPTS or other env variables if needed
+    MAVEN_OPTS = '-Xmx1024m'
+  }
+
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build & Test') {
+      steps {
+        script {
+          // Use withMaven to capture Maven output, provide settings and publish test results automatically
+          // withMaven requires the Pipeline Maven Integration plugin
+          withMaven(maven: 'M3') {
+            if (isUnix()) {
+              sh 'mvn -B -DskipTests=false clean test'
+            } else {
+              bat 'mvn -B -DskipTests=false clean test'
+            }
+          }
+        }
+      }
+      post {
+        always {
+          junit 'target/surefire-reports/*.xml'
+        }
+      }
+    }
+
+    stage('Package') {
+      steps {
+        script {
+          withMaven(maven: 'M3') {
+            if (isUnix()) {
+              sh 'mvn -B -DskipTests=true package'
+            } else {
+              bat 'mvn -B -DskipTests=true package'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Archive & Publish') {
+      steps {
+        script {
+          archiveArtifacts artifacts: 'target/*.jar, target/*.war, target/**/*.zip, test-output/**', fingerprint: true
+
+          // Try publishing HTML reports (Extent / TestNG emailable)
+          def extentDirs = ['test-output/extent-report', 'target/extent-report', 'test-output/ExtentReports']
+          def published = false
+          for (d in extentDirs) {
+            if (fileExists(d + '/index.html')) {
+              publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: d, reportFiles: 'index.html', reportName: "Extent Report (${d})"]) 
+              published = true
+              break
+            }
+          }
+          if (!published) {
+            echo 'No Extent HTML report found to publish.'
+          }
+
+          if (fileExists('test-output/emailable-report.html')) {
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'test-output', reportFiles: 'emailable-report.html', reportName: 'TestNG Emailable Report'])
+          } else {
+            echo 'No TestNG emailable-report.html found under test-output/'.
+          }
+
+          try {
+            publishTestNGResults testNGResultsPattern: 'test-output/testng-results.xml'
+          } catch (err) {
+            echo 'publishTestNGResults step not available or failed: ' + err.toString()
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      echo 'Post: archive xmls and logs'
+      archiveArtifacts artifacts: 'target/surefire-reports/*.xml, test-output/**', fingerprint: true, allowEmptyArchive: true
+    }
+
+    success {
+      echo 'Build succeeded'
+    }
+
+    failure {
+      echo 'Build failed'
+    }
+  }
+}
