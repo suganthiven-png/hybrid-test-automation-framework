@@ -1,4 +1,4 @@
-# Git & GitHub Usage Guide for testNgframeworkwithAIV1
+# Git & GitHub Usage Guide for hybrid-test-automation-framework
 
 This document explains common Git commands and workflows to move the project between local and GitHub, how to create branches, push/pull changes, and handle merges.
 

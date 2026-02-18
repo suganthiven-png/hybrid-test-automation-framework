@@ -1,5 +1,4 @@
-# Contributing to testNgframeworkwithAIV1
-
+# Contributing to hybrid-test-automation-framework
 Thanks for your interest in contributing! This project follows a simple branching and PR workflow.
 
 How to contribute
@@ -28,4 +27,3 @@ Reporting issues
 Contact
 - Mention team members or maintainers in PRs for review.
 
-If you'd like, I can add a basic code style configuration (e.g., Checkstyle) and a CI workflow that runs tests on PRs.

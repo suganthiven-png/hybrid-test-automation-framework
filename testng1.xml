@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<suite name="testNGframeworkwithAI Suite">
+<suite name="hybrid-test-automation-framework Suite">
   <listeners>
     <listener class-name="testNgframeworkwithAIV1.util.TestNGTestListener"/>
   </listeners>
