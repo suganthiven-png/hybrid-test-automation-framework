@@ -58,18 +58,26 @@ mvn -Dtest=testNgframeworkwithAIV1.testcases.TC_Homepage_001 test
 mvn test -DbaseUrl=https://www.guru99.com -Dbrowser=chrome -Dheadless=false -DimplicitWait=10
 ```
 
-Suggested VM arguments for IDE run configurations
-- Visible Chrome run (non-headless):
+Parallel execution
+- The TestNG suite `testng1.xml` is configured to run test classes in parallel (parallel="classes") with a default thread-count of 4.
+- Override thread-count at runtime using Maven system property (note: TestNG's suite file has a static value; to change at runtime you can pass the TestNG suite via Surefire or run TestNG programmatically). The framework provides a convenience property in `config.properties` and `ConfigReader.getThreadCount()` which you can use to coordinate custom TestNG runners or Maven config.
+- Easiest approach from Maven:
+```cmd
+mvn test -DthreadCount=8 -Dheadless=true
 ```
--Dbrowser=chrome -Dheadless=false -DbaseUrl=https://www.guru99.com -DimplicitWait=10
+This will set the `threadCount` system property; to actually use it inside TestNG suite programmatically, you can add a small TestNG runner that reads `ConfigReader.getThreadCount()` and sets the suite's thread count dynamically.
+
+Docker / Selenium Grid (quick example)
+- A docker-compose file is included that starts a Selenium standalone Chrome container and a Maven test-runner container which mounts the project and runs `mvn test` against the Selenium service.
+- To run the tests with Docker Compose (requires Docker and docker-compose):
+```sh
+cd /path/to/testNgframeworkwithAIV1
+docker-compose up --build --abort-on-container-exit
 ```
-- Headless run (CI friendly):
-```
--Dbrowser=chrome -Dheadless=true -DbaseUrl=https://www.guru99.com -DimplicitWait=10
-```
+- The docker-compose setup passes `-Dselenium.remote.url=http://selenium:4444` to run tests against the Selenium service.
 
 Config file
-- `ConfigReader` loads `config.properties` from the classpath. You can override values at runtime using System properties as shown above.
+- `ConfigReader` loads `config.properties` from the classpath (see `src/test/resources/config.properties`). You can override values at runtime using System properties as shown above.
 
 Common troubleshooting
 - "'mvn' is not recognized": either install Maven or use Eclipse's Maven (m2e) integration.

@@ -1,16 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<launchConfiguration type="org.testng.eclipse.launchconfig" version="3"> 
-  <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS"> 
-    <listEntry value=""/> 
-  </listAttribute> 
-  <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES"> 
-    <listEntry value="4"/> 
-  </listAttribute> 
-  <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="testNgframeworkwithAIV1"/> 
-  <stringAttribute key="org.testng.eclipse.TEST_KIND" value="class"/> 
-  <stringAttribute key="org.testng.eclipse.TEST_OBJECT" value="org.testng.eclipse.launchconfig.TestNGLaunchConfiguration"/> 
-  <stringAttribute key="org.testng.eclipse.TESTNAME" value="testNgframeworkwithAIV1.testcases.TC_Homepage_001"/> 
-  <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.testng.TestNG"/> 
-  <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dbrowser=chrome -Dheadless=false -DbaseUrl=https://www.guru99.com -DimplicitWait=10"/> 
-  <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_HEAP" value="false"/> 
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.testng.eclipse.launchconfig">
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+        <listEntry value=""/>
+    </listAttribute>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+        <listEntry value="4"/>
+    </listAttribute>
+    <mapAttribute key="org.eclipse.debug.core.environmentVariables"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_HEAP" value="false"/>
+    <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.testng.TestNG"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="testNgframeworkwithAIV1"/>
+    <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea&#10;"/>
+    <stringAttribute key="org.testng.eclipse.TESTNAME" value="testNgframeworkwithAIV1.testcases.TC_Homepage_001"/>
+    <stringAttribute key="org.testng.eclipse.TEST_KIND" value="class"/>
+    <stringAttribute key="org.testng.eclipse.TEST_OBJECT" value="org.testng.eclipse.launchconfig.TestNGLaunchConfiguration"/>
 </launchConfiguration>
