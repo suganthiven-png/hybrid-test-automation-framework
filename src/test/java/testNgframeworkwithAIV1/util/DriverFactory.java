@@ -108,8 +108,16 @@ public class DriverFactory {
 	public static void quitDriver() {
 		WebDriver wd = driver.get();
 		if (wd != null) {
-			wd.quit();
-			driver.remove();
+			try {
+				wd.quit();
+			} catch (Exception e) {
+				// fallback: try close() and ignore errors to avoid failing teardown
+				try {
+					wd.close();
+				} catch (Exception ignore) {}
+			} finally {
+				driver.remove();
+			}
 		}
 	}
 
