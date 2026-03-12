@@ -69,4 +69,20 @@ public class ConfigReader {
 			return sys;
 		return trimIfNotNull(properties.getProperty("selenium.remote.url", ""));
 	}
+
+	public String[][] getUsers() {
+		String sys = trimIfNotNull(System.getProperty("users"));
+		String raw = (sys != null && !sys.isEmpty()) ? sys
+				: trimIfNotNull(properties.getProperty("users", ""));
+		if (raw == null || raw.isEmpty()) return new String[0][0];
+		String[] pairs = raw.split(",");
+		java.util.List<String[]> list = new java.util.ArrayList<>();
+		for (String pair : pairs) {
+			String trimmed = pair.trim();
+			if (trimmed.isEmpty()) continue;
+			String[] parts = trimmed.split(":", 2);
+			list.add(new String[]{parts[0].trim(), parts.length > 1 ? parts[1].trim() : ""});
+		}
+		return list.toArray(new String[0][0]);
+	}
 }
