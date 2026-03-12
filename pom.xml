@@ -109,5 +109,17 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <!-- Ensure annotation processing is disabled to avoid access issues with some processors on newer JDKs -->
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <proc>none</proc>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>

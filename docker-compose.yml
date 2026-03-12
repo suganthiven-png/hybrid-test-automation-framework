@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  selenium:
+    image: selenium/standalone-chrome:4.11.0-20240605
+    ports:
+      - "4444:4444"
+    shm_size: '2gb'
+
+  test-runner:
+    image: maven:3.9.4-eclipse-temurin-17
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    depends_on:
+      - selenium
+    environment:
+      - MAVEN_OPTS=-Dmaven.test.skip=false
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "echo Waiting for Selenium... && \
+      for i in $(seq 1 30); do \
+        curl -sS http://selenium:4444 || true; \
+        if [ $? -eq 0 ]; then break; fi; \
+        sleep 1; \
+      done; \
+      mvn -B -Dselenium.remote.url=http://selenium:4444 -Dheadless=true test"

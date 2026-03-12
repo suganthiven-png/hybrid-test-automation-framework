@@ -2,10 +2,12 @@
 <suite name="hybrid-test-automation-framework Suite">
   <listeners>
     <listener class-name="testNgframeworkwithAIV1.util.TestNGTestListener"/>
+    <listener class-name="testNgframeworkwithAIV1.util.ThreadCountSuiteListener"/>
   </listeners>
   <test name="Sample Tests">
     <classes>
-      <class name="testNgframeworkwithAIV1.testcases.TC_Homepage_001"/>
+      <class name="testNgframeworkwithAIV1.testcases.TC_Loginpage_001"/>
+      <class name="testNgframeworkwithAIV1.testcases.TC_Cartvalidation_002"/>
     </classes>
   </test>
 </suite>
