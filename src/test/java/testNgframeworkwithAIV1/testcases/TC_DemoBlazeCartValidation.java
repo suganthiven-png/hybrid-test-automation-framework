@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 import model.Product;
 import model.User;
 import model.UserDataProvider;
-import testNgframeworkwithAIV1.pageobjects.DemoblazeCartPage;
+import testNgframeworkwithAIV1.pageobjects.CartPage;
 import testNgframeworkwithAIV1.pageobjects.DemoblazeHomePage;
 import testNgframeworkwithAIV1.util.ScreenshotUtil;
 
@@ -38,9 +38,8 @@ public class TC_DemoBlazeCartValidation extends BaseTest {
         // Go to cart and validate first item matches
         home.goToCart();
         ScreenshotUtil.takeScreenshot("after_navigate_cart_" + user.getUsername());
-        DemoblazeCartPage cart = new DemoblazeCartPage(driver);
+        CartPage cart = new CartPage(driver);        
         Product productInCart = cart.getFirstCartProduct();
-
         Assert.assertEquals(productInCart.getName(), productOnHome.getName(), "Product name in cart does not match selected product");
         Assert.assertEquals(productInCart.getPrice(), productOnHome.getPrice(), "Product price in cart does not match selected product");
     }
