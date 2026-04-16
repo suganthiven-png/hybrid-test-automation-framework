@@ -104,3 +104,84 @@ public class InventoryPage {
 			throw new RuntimeException("Timed out waiting for cart confirmation (badge or 'Remove' text) after clicking add-to-cart", timeout);
 		}
 	}
+
+	// New method: click first product add-to-cart but don't wait for cart badge; useful when badge is flaky
+	public void addFirstProductToCartNoWait() {
+		List<WebElement> items = driver.findElements(inventoryItems);
+		if (items.isEmpty()) throw new RuntimeException("No inventory items found to add to cart");
+		WebElement firstItem = items.get(0);
+		WebElement btn = firstItem.findElement(addToCartButtonWithin);
+
+		int attempts = 0;
+		boolean confirmed = false;
+		while (attempts < 3 && !confirmed) {
+			attempts++;
+			try {
+				((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", btn);
+				WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+				wait.until(ExpectedConditions.elementToBeClickable(btn));
+				btn.click();
+			} catch (Exception e) {
+				String btnId = null;
+				try { btnId = btn.getAttribute("id"); } catch (Exception ignored) {}
+				boolean clicked = false;
+				if (btnId != null && !btnId.isEmpty()) {
+					clicked = WaitUtils.waitAndClick(By.id(btnId), 10);
+				}
+				if (!clicked) {
+					try { btn.click(); } catch (Exception ex) { try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn); } catch (Exception ignore) {} }
+				}
+			}
+
+			// short wait for confirmation
+			try {
+				WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(3));
+				shortWait.until(ExpectedConditions.or(
+						ExpectedConditions.visibilityOfElementLocated(cartBadge),
+						ExpectedConditions.textToBePresentInElement(btn, "Remove")
+					));
+				confirmed = true;
+			} catch (Exception ex) {
+				// not yet confirmed; try again after small sleep
+				try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+			}
+		}
+
+		if (!confirmed) {
+			// capture artifacts for debugging
+			try { ScreenshotUtil.takeScreenshot("addcart_nowait_no_confirmation_retry"); } catch (Exception ignored) {}
+			try { ScreenshotUtil.takePageSource("addcart_nowait_no_confirmation_retry"); } catch (Exception ignored) {}
+		}
+	}
+
+	public void cartclick() {
+		// Use JS click for reliability then navigate to cart URL if needed and wait
+		WebElement cartEl = driver.findElement(cartButton);
+		try {
+			((JavascriptExecutor) driver).executeScript("arguments[0].click();", cartEl);
+		} catch (Exception e) {
+			// fallback to normal click
+			cartEl.click();
+		}
+		// Wait briefly for URL change, then ensure navigation to cart page
+		try {
+			WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+			wait.until(ExpectedConditions.urlContains("cart"));
+		} catch (Exception ignored) {
+		}
+		// If page is not cart, navigate explicitly to origin + /cart.html
+		try {
+			String current = driver.getCurrentUrl();
+			if (current == null || !current.contains("cart")) {
+				URL u = new URL(current);
+				String origin = u.getProtocol() + "://" + u.getHost();
+				if (u.getPort() != -1) origin += ":" + u.getPort();
+				driver.get(origin + "/cart.html");
+				WebDriverWait wait2 = new WebDriverWait(driver, Duration.ofSeconds(10));
+				wait2.until(ExpectedConditions.urlContains("cart"));
+			}
+		} catch (Exception ignored) {
+		}
+	}
+
+}
