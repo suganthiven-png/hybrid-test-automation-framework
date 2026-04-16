@@ -4,8 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import method.Product;
-import model.User;
-import model.UserDataProvider;
+//import model.User;
+//import model.UserDataProvider;
 import testNgframeworkwithAIV1.pageobjects.DemoblazeCartPage;
 import testNgframeworkwithAIV1.pageobjects.DemoblazeHomePage;
 import testNgframeworkwithAIV1.util.ScreenshotUtil;
