@@ -1,21 +1,9 @@
 package method;
 
-public class Product {
-	private String name;
-	private String price;
-	
-    // Proper constructor to set fields
-	public Product(String productname, String price2) {
-		this.name = productname;
-		this.price = price2;
-	}
-
-	// remove invalid no-arg initializer method; keep getters
-	public String getName() {
-		return name;
-	}
-	public String getPrice() {
-		return price;
-	}
-
+// Thin compatibility wrapper so file can remain under 'method' folder without causing package mismatch.
+@Deprecated
+public class Product extends model.Product {
+    public Product(String productname, String price2) {
+        super(productname, price2);
+    }
 }

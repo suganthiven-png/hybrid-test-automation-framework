@@ -7,7 +7,7 @@ import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import method.Product;
+import model.Product;
 import testNgframeworkwithAIV1.pageobjects.Cartpage;
 import testNgframeworkwithAIV1.pageobjects.InventoryPage;
 import testNgframeworkwithAIV1.pageobjects.Loginpage;
