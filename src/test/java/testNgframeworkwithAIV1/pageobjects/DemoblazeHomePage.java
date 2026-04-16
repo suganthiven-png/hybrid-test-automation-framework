@@ -207,4 +207,197 @@ public class DemoblazeHomePage {
         // If already visible, nothing to do
         try { if (isElementPresent(loginUsername, 1)) return; } catch (Exception ignored) {}
 
-    ... (truncated)
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebElement el = wait.until(ExpectedConditions.elementToBeClickable(loginLink));
+            try { el.click(); } catch (Exception e) { try { ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);arguments[0].click();", el); } catch (Exception ignore) {} }
+        } catch (Exception e) {
+            WebElement el = waitForVisible(loginLink, 10);
+            try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el); } catch (Exception ignore) {}
+        }
+
+        By loginModal = By.id("logInModal");
+        try {
+            WebDriverWait modalWait = new WebDriverWait(driver, Duration.ofSeconds(20));
+            modalWait.until(ExpectedConditions.visibilityOfElementLocated(loginModal));
+            modalWait.until(ExpectedConditions.visibilityOfElementLocated(loginUsername));
+        } catch (Exception e) {
+            try {
+                ((JavascriptExecutor) driver).executeScript(
+                        "if(window.jQuery){$('#logInModal').modal('show');} else {var m=document.getElementById('logInModal'); if(m){m.classList.add('show'); m.style.display='block'; m.setAttribute('aria-hidden','false');}}"
+                );
+                WebDriverWait modalWait2 = new WebDriverWait(driver, Duration.ofSeconds(15));
+                modalWait2.until(ExpectedConditions.visibilityOfElementLocated(loginUsername));
+            } catch (Exception ignored) {
+                waitForVisible(loginUsername, 8);
+            }
+        }
+    }
+
+    public void login(String username, String password) {
+        Exception lastEx = null;
+        for (int attempt = 1; attempt <= LOGIN_ATTEMPTS; attempt++) {
+            try {
+                openLoginModal();
+                try {
+                    WebElement userEl = findFirstVisible(8, loginUsername);
+                    userEl.clear();
+                    userEl.sendKeys(username);
+                    WebElement passEl = findFirstVisible(5, loginPassword);
+                    passEl.clear();
+                    passEl.sendKeys(password);
+                    WebElement btn = driver.findElement(loginButtonInModal);
+                    try {
+                        btn.click();
+                    } catch (Exception e) {
+                        try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn); } catch (Exception ignore) {}
+                    }
+                } catch (Exception e) {
+                    // Fallback: set fields and call page JS directly
+                    try {
+                        ((JavascriptExecutor) driver).executeScript(
+                                "if(document.getElementById('loginusername')){document.getElementById('loginusername').value=arguments[0];} if(document.getElementById('loginpassword')){document.getElementById('loginpassword').value=arguments[1];} if(window.logIn){logIn();}",
+                                username, password
+                        );
+                    } catch (Exception jsEx) {
+                        throw new RuntimeException("Failed to interact with login modal", jsEx);
+                    }
+                }
+
+                // wait for either nav username or error label or alert
+                try {
+                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(MODAL_TIMEOUT_SECONDS));
+                    wait.until(ExpectedConditions.or(
+                            ExpectedConditions.visibilityOfElementLocated(By.id("nameofuser")),
+                            ExpectedConditions.visibilityOfElementLocated(By.id("errorl")),
+                            ExpectedConditions.alertIsPresent()
+                    ));
+                } catch (Exception ignored) {
+                }
+
+                // check alert
+                try {
+                    WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
+                    shortWait.until(ExpectedConditions.alertIsPresent());
+                    String alertText = driver.switchTo().alert().getText();
+                    driver.switchTo().alert().accept();
+                    if (alertText != null) {
+                        String lower = alertText.toLowerCase();
+                        if (lower.contains("502") || lower.contains("bad gateway") || lower.contains("server error")) {
+                            lastEx = new RuntimeException("Login alert indicates server error: " + alertText);
+                            Thread.sleep(500L * attempt);
+                            continue; // retry
+                        }
+                    }
+                } catch (Exception noAlert) {
+                    // no alert
+                }
+
+                // check nav username
+                if (isElementPresent(By.id("nameofuser"), 2)) {
+                    return; // logged in
+                }
+
+                // check error label
+                try {
+                    WebElement err = driver.findElement(By.id("errorl"));
+                    String txt = err.getText();
+                    if (txt != null && !txt.trim().isEmpty()) {
+                        String lower = txt.toLowerCase();
+                        if (lower.contains("502") || lower.contains("bad gateway") || lower.contains("server error")) {
+                            lastEx = new RuntimeException("Login modal reports server error: " + txt);
+                            Thread.sleep(500L * attempt);
+                            continue; // retry
+                        }
+                        // other auth error
+                        throw new RuntimeException("Login failed: " + txt);
+                    }
+                } catch (Exception e) {
+                    // no explicit error label; retry once
+                }
+
+                // If reached here and not logged in, retry after a small backoff
+                lastEx = new RuntimeException("Login did not complete (no nav username or explicit error)");
+                Thread.sleep(500L * attempt);
+            } catch (Exception e) {
+                lastEx = e;
+                try { Thread.sleep(500L * attempt); } catch (InterruptedException ignored) {}
+            }
+        }
+
+        try { ScreenshotUtil.takeScreenshot("login_failure_" + username); } catch (Exception ignored) {}
+        try { ScreenshotUtil.takePageSource("login_failure_" + username); } catch (Exception ignored) {}
+        if (lastEx instanceof RuntimeException) throw (RuntimeException) lastEx;
+        throw new RuntimeException("Login failed after retries for user: " + username, lastEx);
+    }
+
+    public Product captureFirstProductInfo() {
+        WebElement first = waitForVisible(firstProductContainer, 10);
+        String name = "";
+        String price = "";
+        try {
+            name = first.findElement(productNameWithin).getText();
+        } catch (Exception e) {
+            // fallback: search within tbody
+            try { name = driver.findElement(By.cssSelector("#tbodyid .hrefch")).getText(); } catch (Exception ignore) {}
+        }
+        try {
+            price = first.findElement(productPriceWithin).getText();
+        } catch (Exception e) {
+            try { price = driver.findElement(By.cssSelector("#tbodyid h5")).getText(); } catch (Exception ignore) {}
+        }
+        return new Product(name, price);
+    }
+
+    public void clickFirstProduct() {
+        WebElement first = waitForVisible(firstProductContainer, 10);
+        WebElement link = first.findElement(productNameWithin);
+        try {
+            link.click();
+        } catch (Exception e) {
+            try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", link); } catch (Exception ignore) {}
+        }
+        // wait for product detail page to load - product name link in detail has class name 'name' or similar; wait for Add to cart button
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        try { wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[text()='Add to cart']"))); } catch (Exception ignored) {}
+    }
+
+    // On product detail page click Add to cart
+    public void addToCartFromProductPage() {
+        By addToCart = By.xpath("//a[text()='Add to cart']");
+        WebElement btn = waitForVisible(addToCart, 8);
+        try { btn.click(); } catch (Exception e) { try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn); } catch (Exception ignore) {} }
+        // after clicking add to cart, demoblaze shows an alert; accept it
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            wait.until(ExpectedConditions.alertIsPresent());
+            driver.switchTo().alert().accept();
+        } catch (Exception ignored) {
+        }
+    }
+
+    public void goToCart() {
+        By cartLink = By.id("cartur");
+        waitForVisible(cartLink, 5).click();
+        // wait for cart table
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(8));
+        try { wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#tbodyid tr"))); } catch (Exception ignored) {}
+    }
+
+    // Add helper to try multiple locators and return first visible element
+    private WebElement findFirstVisible(int seconds, By... locators) {
+        for (By loc : locators) {
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
+                WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(loc));
+                if (el != null && el.isDisplayed()) return el;
+            } catch (Exception ignored) {}
+        }
+        // last resort: try findElement without wait for first locator
+        try {
+            WebElement el = driver.findElement(locators[0]);
+            if (el != null && el.isDisplayed()) return el;
+        } catch (Exception ignored) {}
+        throw new org.openqa.selenium.TimeoutException("None of the provided locators became visible");
+    }
+}
