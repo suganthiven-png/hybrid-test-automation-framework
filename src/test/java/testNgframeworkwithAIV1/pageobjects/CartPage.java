@@ -6,45 +6,36 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import method.Product;
+import model.Product;
 
 import java.time.Duration;
 import java.util.List;
 
 public class CartPage {
-	private WebDriver driver;
-	private By cartItems = By.cssSelector("div.cart_item");
-	private By cartItemName = By.cssSelector("div.inventory_item_name");
-	private By cartItemPrice = By.cssSelector("div.inventory_item_price");
+    private WebDriver driver;
 
-	public CartPage(WebDriver driver) {
-		this.driver=driver;
-	}
+    private By cartItems = By.cssSelector("div.cart_item");
+    private By cartItemName = By.cssSelector("div.inventory_item_name");
+    private By cartItemPrice = By.cssSelector("div.inventory_item_price");
 
-	private WebElement waitForVisible(By locator, int seconds) {
-		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
-		return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-	}
+    public CartPage(WebDriver driver) {
+        this.driver = driver;
+    }
 
-	public Product getcardInformation() {
-		return getCartProductDetails();
-	}
+    public Product getFirstCartProduct() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(cartItems));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(cartItems));
 
-	public Product getCartProductDetails() {
+        List<WebElement> items = driver.findElements(cartItems);
+        if (items.isEmpty()) {
+            throw new RuntimeException("No items found in cart");
+        }
 
-		// Wait longer for cart items to be present/visible (client-side rendering may be delayed)
-		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-		wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(cartItems));
-		wait.until(ExpectedConditions.visibilityOfElementLocated(cartItems));
+        WebElement firstItem = items.get(0);
+        String name = firstItem.findElement(cartItemName).getText().trim();
+        String price = firstItem.findElement(cartItemPrice).getText().trim();
 
-		List<WebElement> items = driver.findElements(cartItems);
-		if (items.isEmpty()) throw new RuntimeException("No items found in cart");
-		WebElement firstItem = items.get(0);
-
-		String name = firstItem.findElement(cartItemName).getText();
-		String price = firstItem.findElement(cartItemPrice).getText();
-
-		return new Product(name, price);
-	}
-
+        return new Product(name, price);
+    }
 }
