@@ -70,10 +70,36 @@ public class ConfigReader {
         return trimIfNotNull(properties.getProperty("selenium.remote.url", ""));
     }
 
-    public String getUsers() {
+   /* public String getUsers() {
         String sys = trimIfNotNull(System.getProperty("users"));
         if (sys != null && !sys.isEmpty())
             return sys;
         return trimIfNotNull(properties.getProperty("users", ""));
+    }*/
+    public String[][] getUsers() {
+    String sys = trimIfNotNull(System.getProperty("users"));
+    String raw = (sys != null && !sys.isEmpty())
+            ? sys
+            : trimIfNotNull(properties.getProperty("users", ""));
+
+    if (raw == null || raw.isEmpty()) {
+        return new String[0][0];
     }
+
+    // Expected format:
+    // users=user1:pass1,user2:pass2,user3:pass3
+    String[] pairs = raw.split(",");
+    String[][] users = new String[pairs.length][2];
+
+    for (int i = 0; i < pairs.length; i++) {
+        String[] parts = pairs[i].trim().split(":");
+        if (parts.length != 2) {
+            throw new RuntimeException("Invalid users format in config. Expected user:pass,user:pass");
+        }
+        users[i][0] = parts[0].trim();
+        users[i][1] = parts[1].trim();
+    }
+
+    return users;
+}
 }
