@@ -11,13 +11,13 @@ import method.Product;
 import java.time.Duration;
 import java.util.List;
 
-public class Cartpage {
+public class CartPage {
 	private WebDriver driver;
 	private By cartItems = By.cssSelector("div.cart_item");
 	private By cartItemName = By.cssSelector("div.inventory_item_name");
 	private By cartItemPrice = By.cssSelector("div.inventory_item_price");
 
-	public Cartpage(WebDriver driver) {
+	public CartPage(WebDriver driver) {
 		this.driver=driver;
 	}
 
