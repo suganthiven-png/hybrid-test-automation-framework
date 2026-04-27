@@ -8,7 +8,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import model.Product;
-import testNgframeworkwithAIV1.pageobjects.Cartpage;
+import testNgframeworkwithAIV1.pageobjects.CartPage;
 import testNgframeworkwithAIV1.pageobjects.InventoryPage;
 import testNgframeworkwithAIV1.pageobjects.Loginpage;
 
@@ -25,7 +25,7 @@ public class TC_Cartvalidation_002 extends BaseTest{
 		// Use no-wait variant to avoid flaky cart badge timing
 		inventory.addFirstProductToCartNoWait();
 		inventory.cartclick();
-		Cartpage cart=new Cartpage(driver);
+		CartPage cart=new CartPage(driver);
 		Product productcart=cart.getcardInformation();
 		Assert.assertEquals(productcart.getName(),product.getName());
 		Assert.assertEquals(productcart.getPrice(),product.getPrice());
