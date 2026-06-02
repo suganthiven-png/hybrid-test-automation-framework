@@ -1,36 +1,94 @@
-publish-report:
-  name: Publish TestNG Report to GitHub Pages
-  needs: build-and-test
-  runs-on: ubuntu-latest
-  if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+name: CI
 
-  environment:
-    name: github-pages
-    url: ${{ steps.deployment.outputs.page_url }}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-  steps:
-    - name: Download test-output artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: test-output
-        path: ./artifacts
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
-    - name: Ensure TestNG report exists
-      run: |
-        if [ ! -f "./artifacts/test-output/index.html" ]; then
-          echo "TestNG report not found, aborting publish."
-          ls -R ./artifacts || true
-          exit 1
-        fi
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-    - name: Configure Pages
-      uses: actions/configure-pages@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v5
-      with:
-        path: ./artifacts/test-output
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Run TestNG suite
+        run: |
+          mvn -B clean test -Dheadless=true -Dbrowser=chrome -DbaseUrl=https://www.mueller.de/ -DimplicitWait=2
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: |
+            test-output
+            target/surefire-reports
+            target/failsafe-reports
+
+      - name: List generated reports
+        if: always()
+        run: |
+          echo "==== test-output ===="
+          ls -R test-output || true
+          echo "==== surefire-reports ===="
+          ls -R target/surefire-reports || true
+
+  publish-report:
+    name: Publish TestNG Report
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download test-output artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-output
+          path: ./artifacts
+
+      - name: Ensure TestNG report exists
+        run: |
+          if [ ! -f "./artifacts/test-output/index.html" ]; then
+            echo "TestNG report not found."
+            ls -R ./artifacts || true
+            exit 1
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./artifacts/test-output
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
