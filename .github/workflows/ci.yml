@@ -75,7 +75,7 @@ jobs:
 
       - name: Ensure TestNG report exists
         run: |
-          if [ ! -f "./artifacts/test-output/index.html" ]; then
+          if [ ! -f "./artifacts/target/surefire-reports/index.html" ]; then
             echo "TestNG report not found."
             ls -R ./artifacts || true
             exit 1
@@ -87,7 +87,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./artifacts/test-output
+          path: ./artifacts/target/surefire-reports
 
       - name: Deploy to GitHub Pages
         id: deployment
