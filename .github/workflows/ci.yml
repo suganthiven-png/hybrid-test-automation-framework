@@ -36,7 +36,7 @@ jobs:
 
       - name: Run TestNG suite
         run: |
-          mvn -B clean test -Dheadless=true -Dbrowser=chrome -DbaseUrl=https://www.mueller.de/ -DimplicitWait=2
+          mvn -B clean test -Dheadless=true -Dbrowser=chrome -DimplicitWait=2
 
       - name: Upload test artifacts
         if: always()
