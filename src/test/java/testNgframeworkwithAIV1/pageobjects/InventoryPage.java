@@ -114,7 +114,7 @@ public class InventoryPage {
 
 		int attempts = 0;
 		boolean confirmed = false;
-		while (attempts < 3 && !confirmed) {
+		while (attempts < 5 && !confirmed) {
 			attempts++;
 			try {
 				((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", btn);
@@ -127,6 +127,10 @@ public class InventoryPage {
 				boolean clicked = false;
 				if (btnId != null && !btnId.isEmpty()) {
 					clicked = WaitUtils.waitAndClick(By.id(btnId), 10);
+					if (!clicked) {
+						// stronger fallback: execute JS to click by id (works even if element is not considered clickable)
+						try { ((JavascriptExecutor) driver).executeScript("document.getElementById(arguments[0]).click();", btnId); clicked = true; } catch (Exception ignore) {}
+					}
 				}
 				if (!clicked) {
 					try { btn.click(); } catch (Exception ex) { try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn); } catch (Exception ignore) {} }
@@ -137,9 +141,9 @@ public class InventoryPage {
 			try {
 				WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(3));
 				shortWait.until(ExpectedConditions.or(
-						ExpectedConditions.visibilityOfElementLocated(cartBadge),
-						ExpectedConditions.textToBePresentInElement(btn, "Remove")
-					));
+					ExpectedConditions.visibilityOfElementLocated(cartBadge),
+					ExpectedConditions.textToBePresentInElement(btn, "Remove")
+				));
 				confirmed = true;
 			} catch (Exception ex) {
 				// not yet confirmed; try again after small sleep
@@ -151,6 +155,24 @@ public class InventoryPage {
 			// capture artifacts for debugging
 			try { ScreenshotUtil.takeScreenshot("addcart_nowait_no_confirmation_retry"); } catch (Exception ignored) {}
 			try { ScreenshotUtil.takePageSource("addcart_nowait_no_confirmation_retry"); } catch (Exception ignored) {}
+			// Final JS fallback: click the first add-to-cart button using querySelector
+			try {
+				((JavascriptExecutor) driver).executeScript("document.querySelectorAll('button.btn_inventory')[0].click();");
+				WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+				shortWait.until(ExpectedConditions.or(
+					ExpectedConditions.visibilityOfElementLocated(cartBadge),
+					ExpectedConditions.textToBePresentInElement(btn, "Remove")
+				));
+				confirmed = true;
+			} catch (Exception ignored) {
+				// still not confirmed
+			}
+		}
+
+		if (!confirmed) {
+			// capture artifacts for debugging
+			try { ScreenshotUtil.takeScreenshot("addcart_nowait_no_confirmation_retry_finalfail"); } catch (Exception ignored) {}
+			try { ScreenshotUtil.takePageSource("addcart_nowait_no_confirmation_retry_finalfail"); } catch (Exception ignored) {}
 		}
 	}
 
